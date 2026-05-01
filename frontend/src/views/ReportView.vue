@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 
-const API = 'http://127.0.0.1:5000'
+const API = 'https://databaseapp-68wc.onrender.com'
 
 const cuisineOptions = ref([])
 const ingredientOptions = ref([])
