@@ -1,20 +1,28 @@
-from flask import Flask, jsonify 
+from flask import Flask, jsonify
 from flask_cors import CORS
+from db import init_db, seed_db, seed_reviews, get_db
+from routes.recipes import recipes_bp
+from routes.ingredients import ingredients_bp
+from routes.report import report_bp
+from routes.reviews import reviews_bp
 
 app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "*"}})
 
-app.config.from_object(__name__)
+# Register blueprints
+app.register_blueprint(recipes_bp)
+app.register_blueprint(ingredients_bp)
+app.register_blueprint(report_bp)
+app.register_blueprint(reviews_bp)
 
-CORS(app, resources = {r"/*": {"origins": "*"}})
-CORS(app, resources = {r"/*": {"origins": "http://localhost:8080", "allow_headers": "Access-Control-Allow-Origin"}})
-
-# Hello world tour 
 @app.route('/greetings', methods=['GET'])
 def hello():
-  return "Hello World! CS34800 project"
-
+    return jsonify({'message': 'Hello World! CS34800 Recipe App'}), 200
 
 if __name__ == '__main__':
-  # Run the app development mode
-  app.run(debug=True)
-    
+    init_db()
+    seed_db()
+    conn = get_db()
+    seed_reviews(conn)
+    conn.close()
+    app.run(debug=True)
