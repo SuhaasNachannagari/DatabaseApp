@@ -1,23 +1,58 @@
 <script setup>
 import { RouterView, RouterLink, useRoute } from 'vue-router'
-import { computed } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 
 const route = useRoute()
 const currentRoute = computed(() => route.name)
+
+const isReady = ref(false)
+const isWakingUp = ref(false)
+
+onMounted(async () => {
+  // If the server takes more than 1 second, show the "waking up" message
+  const timer = setTimeout(() => {
+    if (!isReady.value) {
+      isWakingUp.value = true
+    }
+  }, 1000)
+
+  try {
+    await fetch('https://databaseapp-68wc.onrender.com/greetings')
+  } catch (e) {
+    console.error('Failed to wake up backend:', e)
+  } finally {
+    clearTimeout(timer)
+    isReady.value = true
+    isWakingUp.value = false
+  }
+})
 </script>
 
 <template>
   <div class="app-wrapper">
-    <nav class="top-nav">
-      <span class="nav-brand">Recipe Manager</span>
-      <div class="nav-links">
-        <RouterLink to="/" class="nav-link" :class="{ active: currentRoute === 'recipes' }">Recipes</RouterLink>
-        <RouterLink to="/report" class="nav-link" :class="{ active: currentRoute === 'report' }">Report</RouterLink>
+    <!-- Waking up screen -->
+    <div v-if="!isReady && isWakingUp" class="wake-up-screen">
+      <div class="loader-content">
+        <div class="spinner"></div>
+        <h2>Waking up the server...</h2>
+        <p>This is hosted on Render's free tier, so it might take up to 50 seconds to spin up from sleep.</p>
+        <p>Hang tight! 🍳</p>
       </div>
-    </nav>
-    <main class="main-content">
-      <RouterView />
-    </main>
+    </div>
+
+    <!-- Main app -->
+    <div v-else-if="isReady">
+      <nav class="top-nav">
+        <span class="nav-brand">Recipe Manager</span>
+        <div class="nav-links">
+          <RouterLink to="/" class="nav-link" :class="{ active: currentRoute === 'recipes' }">Recipes</RouterLink>
+          <RouterLink to="/report" class="nav-link" :class="{ active: currentRoute === 'report' }">Report</RouterLink>
+        </div>
+      </nav>
+      <main class="main-content">
+        <RouterView />
+      </main>
+    </div>
   </div>
 </template>
 
@@ -74,5 +109,57 @@ const currentRoute = computed(() => route.name)
   padding: 28px 32px;
   max-width: 1200px;
   margin: 0 auto;
+}
+
+.wake-up-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  text-align: center;
+  background: var(--color-bg-white);
+}
+
+.loader-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  max-width: 400px;
+  padding: 32px;
+  border: 3px dashed var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-primary-light);
+  transform: rotate(-1deg);
+}
+
+.loader-content h2 {
+  font-family: var(--font-fun);
+  color: var(--color-primary);
+  font-size: 28px;
+  margin: 0;
+}
+
+.loader-content p {
+  color: var(--color-text-light);
+  line-height: 1.5;
+  margin: 0;
+  font-size: 15px;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px dashed var(--color-border);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1.5s linear infinite;
+  margin-bottom: 8px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>
