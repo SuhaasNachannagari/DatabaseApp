@@ -19,10 +19,13 @@ app.register_blueprint(reviews_bp)
 def hello():
     return jsonify({'message': 'Hello World! CS34800 Recipe App'}), 200
 
+import os
+
 if __name__ == '__main__':
     init_db()
     seed_db()
     conn = get_db()
     seed_reviews(conn)
     conn.close()
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=True)
